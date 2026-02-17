@@ -1,17 +1,29 @@
-//
-//  StackEmsApp.swift
-//  StackEms
-//
-//  Created by Alan Leatherman on 2/13/26.
-//
-
 import SwiftUI
+import RealityKit
 
 @main
 struct StackEmsApp: App {
-    var body: some Scene {
+    @State private var appContainer = AppContainer()
+
+    init() {
+        StackMemberComponent.registerComponent()
+        StackControllerComponent.registerComponent()
+        HealthComponent.registerComponent()
+        TeamComponent.registerComponent()
+        SwipeableComponent.registerComponent()
+        CameraTargetComponent.registerComponent()
+        AIControlledComponent.registerComponent()
+        StackPhysicsSystem.registerSystem()
+        SwipeForceSystem.registerSystem()
+        StackMovementSystem.registerSystem()
+        CameraFollowSystem.registerSystem()
+        AIBehaviorSystem.registerSystem()
+        WinConditionSystem.registerSystem()
+    }
+
+    var body: some SwiftUI.Scene {
         WindowGroup {
-            ContentView()
+            MainAppView(appContainer: appContainer)
         }
     }
 }
