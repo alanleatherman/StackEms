@@ -5,6 +5,7 @@ struct StackControllerComponent: Component {
     var movementInput: SIMD2<Float> = .zero
     var hasToppled: Bool = false
     var attachedBlockCount: Int = 0
+    var movementSpeed: Float = 4.0
     var team: Team = .player
 
     enum Team: String {

@@ -1,11 +1,13 @@
 import Foundation
 
-struct MatchResult: Equatable, Identifiable {
+struct MatchResult: Equatable, Identifiable, Codable {
     let id: UUID
     let playerWon: Bool
     let playerBlocksRemaining: Int
     let opponentBlocksRemaining: Int
     let matchDuration: TimeInterval
+    let coinsEarned: Int
+    let xpEarned: Int
     let date: Date
 
     init(
@@ -14,6 +16,8 @@ struct MatchResult: Equatable, Identifiable {
         playerBlocksRemaining: Int,
         opponentBlocksRemaining: Int,
         matchDuration: TimeInterval,
+        coinsEarned: Int = 0,
+        xpEarned: Int = 0,
         date: Date = .now
     ) {
         self.id = id
@@ -21,6 +25,8 @@ struct MatchResult: Equatable, Identifiable {
         self.playerBlocksRemaining = playerBlocksRemaining
         self.opponentBlocksRemaining = opponentBlocksRemaining
         self.matchDuration = matchDuration
+        self.coinsEarned = coinsEarned
+        self.xpEarned = xpEarned
         self.date = date
     }
 }

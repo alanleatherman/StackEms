@@ -11,11 +11,18 @@ struct CombatView: View {
                 let arena = ArenaBuilder.buildArena()
                 content.add(arena)
 
+                let profileState = container.appState.profileState
+                let playerStatsLookup: (BlockType) -> ResolvedBlockStats = { blockType in
+                    let upgrades = profileState.upgradeLevel(for: blockType)
+                    return BlockStatsConfig.resolve(blockType: blockType, upgrades: upgrades)
+                }
+
                 let playerStack = StackFactory.buildStack(
                     from: container.appState.matchState.playerBlueprint,
                     teamName: "player",
                     position: [0, 0, GameConfiguration.Arena.playerStartZ],
-                    withPhysics: true
+                    withPhysics: true,
+                    statsLookup: playerStatsLookup
                 )
                 content.add(playerStack)
 

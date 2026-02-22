@@ -55,4 +55,47 @@ struct GameConfiguration {
         static let countdownDuration: TimeInterval = 3.0
         static let maxMatchDuration: TimeInterval = 90.0
     }
+
+    enum Progression {
+        // XP rewards
+        static let xpPerWin: Int = 100
+        static let xpPerLoss: Int = 10
+        static let xpPerBlockRemaining: Int = 10
+        static let xpBonusFastWin: Int = 25
+        static let xpBonusPerfectWin: Int = 50
+        static let fastWinThreshold: TimeInterval = 30.0
+
+        // Coin rewards
+        static let coinsPerWin: Int = 50
+        static let coinsPerLoss: Int = 0
+        static let coinsPerBlockRemaining: Int = 5
+        static let coinsBonusFastWin: Int = 15
+        static let coinsBonusPerfectWin: Int = 30
+        static let coinsStreakBonus: Int = 10
+
+        // Leveling — quadratic curve
+        static func xpRequiredForLevel(_ level: Int) -> Int {
+            level * level * 100 + level * 100
+        }
+
+        static func levelForTotalXP(_ xp: Int) -> Int {
+            var level = 1
+            var accumulated = 0
+            while true {
+                let required = xpRequiredForLevel(level)
+                if accumulated + required > xp { break }
+                accumulated += required
+                level += 1
+            }
+            return level
+        }
+
+        static func xpAccumulatedForLevel(_ level: Int) -> Int {
+            var total = 0
+            for l in 1..<level {
+                total += xpRequiredForLevel(l)
+            }
+            return total
+        }
+    }
 }

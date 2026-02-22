@@ -4,12 +4,16 @@ import RealityKit
 struct WinConditionSystem: System {
     static let query = EntityQuery(where: .has(StackControllerComponent.self))
     static var matchEndedFired = false
+    static var combatActive = false
 
     init(scene: RealityKit.Scene) {
         WinConditionSystem.matchEndedFired = false
+        WinConditionSystem.combatActive = false
     }
 
     func update(context: SceneUpdateContext) {
+        guard WinConditionSystem.combatActive else { return }
+
         var playerAttached = 0
         var opponentAttached = 0
         var playerToppled = false

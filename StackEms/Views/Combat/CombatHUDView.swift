@@ -4,46 +4,47 @@ struct CombatHUDView: View {
     @Environment(\.appContainer) private var container
 
     var body: some View {
-        HStack {
-            // Menu button
-            Button {
-                container.matchInteractor.returnToMenu()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 24))
-                    .foregroundStyle(.white)
-                    .shadow(color: .black, radius: 3)
-            }
-            .padding(.trailing, 8)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("You")
-                    .font(StackEmsTheme.Fonts.caption)
-                    .foregroundStyle(.cyan)
-                Text("\(container.appState.matchState.playerBlocksRemaining) blocks")
-                    .font(StackEmsTheme.Fonts.body)
-                    .foregroundStyle(.white)
-                    .shadow(color: .black, radius: 2)
-            }
-
-            Spacer()
-
+        ZStack {
+            // Timer — absolutely centered
             Text(timerText)
                 .font(StackEmsTheme.Fonts.heading)
                 .foregroundStyle(.white)
                 .shadow(color: .black, radius: 3)
                 .monospacedDigit()
 
-            Spacer()
+            // Side panels + menu button
+            HStack {
+                Button {
+                    container.matchInteractor.returnToMenu()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black, radius: 3)
+                }
+                .padding(.trailing, 8)
 
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("Opponent")
-                    .font(StackEmsTheme.Fonts.caption)
-                    .foregroundStyle(.orange)
-                Text("\(container.appState.matchState.opponentBlocksRemaining) blocks")
-                    .font(StackEmsTheme.Fonts.body)
-                    .foregroundStyle(.white)
-                    .shadow(color: .black, radius: 2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("You")
+                        .font(StackEmsTheme.Fonts.caption)
+                        .foregroundStyle(.cyan)
+                    Text("\(container.appState.matchState.playerBlocksRemaining) blocks")
+                        .font(StackEmsTheme.Fonts.body)
+                        .foregroundStyle(.white)
+                        .shadow(color: .black, radius: 2)
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("Opponent")
+                        .font(StackEmsTheme.Fonts.caption)
+                        .foregroundStyle(.orange)
+                    Text("\(container.appState.matchState.opponentBlocksRemaining) blocks")
+                        .font(StackEmsTheme.Fonts.body)
+                        .foregroundStyle(.white)
+                        .shadow(color: .black, radius: 2)
+                }
             }
         }
         .padding(.horizontal)

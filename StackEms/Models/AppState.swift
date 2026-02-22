@@ -31,9 +31,24 @@ final class MatchState {
 @Observable
 final class ProfileState {
     var playerName: String = "Player"
+    var coins: Int = 0
+    var xp: Int = 0
+    var level: Int = 1
     var wins: Int = 0
     var losses: Int = 0
+    var currentWinStreak: Int = 0
+    var bestWinStreak: Int = 0
     var matchHistory: [MatchResult] = []
+    var lastMatchRewards: MatchRewards? = nil
+    var blockUpgrades: [BlockType: BlockStats] = [:]
+
+    func upgradeLevel(for blockType: BlockType) -> BlockStats {
+        blockUpgrades[blockType] ?? BlockStats(power: 1, defense: 1, speed: 1)
+    }
+
+    func setUpgradeLevel(for blockType: BlockType, stats: BlockStats) {
+        blockUpgrades[blockType] = stats
+    }
 
     var totalMatches: Int { wins + losses }
 
@@ -42,12 +57,32 @@ final class ProfileState {
         return Double(wins) / Double(totalMatches)
     }
 
-    func recordResult(_ result: MatchResult) {
+    var xpForCurrentLevel: Int {
+        GameConfiguration.Progression.xpRequiredForLevel(level)
+    }
+
+    var xpIntoCurrentLevel: Int {
+        xp - GameConfiguration.Progression.xpAccumulatedForLevel(level)
+    }
+
+    var levelProgress: Double {
+        guard xpForCurrentLevel > 0 else { return 0 }
+        return Double(xpIntoCurrentLevel) / Double(xpForCurrentLevel)
+    }
+
+    func recordResult(_ result: MatchResult, rewards: MatchRewards) {
         if result.playerWon {
             wins += 1
+            currentWinStreak += 1
+            bestWinStreak = max(bestWinStreak, currentWinStreak)
         } else {
             losses += 1
+            currentWinStreak = 0
         }
+        coins += rewards.coinsEarned
+        xp += rewards.xpEarned
+        level = rewards.newLevel
+        lastMatchRewards = rewards
         matchHistory.append(result)
     }
 }

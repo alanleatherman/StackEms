@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import RealityKit
 
 @main
@@ -25,5 +26,6 @@ struct StackEmsApp: App {
         WindowGroup {
             MainAppView(appContainer: appContainer)
         }
+        .modelContainer(for: [PlayerProfile.self, PersistedMatchResult.self])
     }
 }

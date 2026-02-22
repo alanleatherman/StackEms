@@ -33,12 +33,16 @@ enum BlockType: String, CaseIterable, Identifiable, Codable, Sendable {
 
     var subtitle: String {
         switch self {
-        case .capyblocka: "Heavy Base"
-        case .tortodome: "Stable"
-        case .jellypop: "Bouncy"
-        case .cubeuin: "Slippery"
-        case .triacera: "Disrupter"
+        case .capyblocka: "Tank"
+        case .tortodome: "Guardian"
+        case .jellypop: "Bouncer"
+        case .cubeuin: "Speedster"
+        case .triacera: "Brawler"
         }
+    }
+
+    var baseStats: BlockStats {
+        BlockStatsConfig.baseStats(for: self)
     }
 
     var textureName: String {

@@ -3,6 +3,7 @@ import Foundation
 @Observable
 final class StackBuilderInteractor {
     private let matchState: MatchState
+    var onTeamChanged: (([BlockType]) -> Void)?
 
     init(matchState: MatchState) {
         self.matchState = matchState
@@ -11,20 +12,24 @@ final class StackBuilderInteractor {
     func addBlock(_ type: BlockType) {
         guard matchState.playerBlueprint.blocks.count < StackBlueprint.maxBlocks else { return }
         matchState.playerBlueprint.blocks.append(type)
+        onTeamChanged?(matchState.playerBlueprint.blocks)
     }
 
     func removeBlock(at index: Int) {
         guard matchState.playerBlueprint.blocks.indices.contains(index) else { return }
         matchState.playerBlueprint.blocks.remove(at: index)
+        onTeamChanged?(matchState.playerBlueprint.blocks)
     }
 
     func replaceBlock(at index: Int, with type: BlockType) {
         guard matchState.playerBlueprint.blocks.indices.contains(index) else { return }
         matchState.playerBlueprint.blocks[index] = type
+        onTeamChanged?(matchState.playerBlueprint.blocks)
     }
 
     func resetToDefault() {
         matchState.playerBlueprint = .defaultBlueprint
+        onTeamChanged?(matchState.playerBlueprint.blocks)
     }
 
     func generateAIBlueprint(difficulty: DifficultyLevel) {

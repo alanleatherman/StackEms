@@ -55,6 +55,7 @@ final class MatchCoordinator {
     private func beginCombat() {
         logger.info("beginCombat: setting phase to .combat")
         matchInteractor.beginCombat()
+        WinConditionSystem.combatActive = true
         startMatchTimer()
         observeMatchNotifications()
     }
@@ -122,6 +123,7 @@ final class MatchCoordinator {
 
     func stopTimers() {
         logger.info("stopTimers called")
+        WinConditionSystem.combatActive = false
         countdownTask?.cancel()
         countdownTask = nil
         matchTimerTask?.cancel()

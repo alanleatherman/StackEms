@@ -4,6 +4,7 @@ import Foundation
 final class MatchInteractor {
     private let matchState: MatchState
     private let profileState: ProfileState
+    var onMatchEnd: (() -> Void)?
 
     init(matchState: MatchState, profileState: ProfileState) {
         self.matchState = matchState
@@ -22,14 +23,28 @@ final class MatchInteractor {
     }
 
     func endMatch(playerWon: Bool) {
+        let rewards = RewardCalculator.calculate(
+            playerWon: playerWon,
+            playerBlocksRemaining: matchState.playerBlocksRemaining,
+            totalPlayerBlocks: matchState.playerBlueprint.blocks.count,
+            matchDuration: matchState.matchTimer,
+            currentWinStreak: profileState.currentWinStreak,
+            currentXP: profileState.xp,
+            currentLevel: profileState.level
+        )
+
         let result = MatchResult(
             playerWon: playerWon,
             playerBlocksRemaining: matchState.playerBlocksRemaining,
             opponentBlocksRemaining: matchState.opponentBlocksRemaining,
-            matchDuration: matchState.matchTimer
+            matchDuration: matchState.matchTimer,
+            coinsEarned: rewards.coinsEarned,
+            xpEarned: rewards.xpEarned
         )
+
         matchState.phase = .result(result)
-        profileState.recordResult(result)
+        profileState.recordResult(result, rewards: rewards)
+        onMatchEnd?()
     }
 
     func returnToMenu() {

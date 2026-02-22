@@ -6,7 +6,8 @@ struct StackFactory {
         from blueprint: StackBlueprint,
         teamName: String,
         position: SIMD3<Float>,
-        withPhysics: Bool = false
+        withPhysics: Bool = false,
+        statsLookup: ((BlockType) -> ResolvedBlockStats)? = nil
     ) -> Entity {
         let stackRoot = Entity()
         stackRoot.name = "stack_\(teamName)"
@@ -16,11 +17,13 @@ struct StackFactory {
         var yOffset: Float = GameConfiguration.Stack.baseYOffset
 
         for (index, blockType) in blueprint.blocks.enumerated() {
+            let resolved = statsLookup?(blockType)
             let block = buildBlock(
                 type: blockType,
                 index: index,
                 teamName: teamName,
-                withPhysics: withPhysics
+                withPhysics: withPhysics,
+                resolvedStats: resolved
             )
 
             let size = blockType.size
@@ -34,8 +37,21 @@ struct StackFactory {
 
         if withPhysics {
             let team: StackControllerComponent.Team = teamName == "player" ? .player : .opponent
+
+            // Compute movement speed from average speed factor
+            let avgSpeedFactor: Float
+            if let lookup = statsLookup {
+                let factors = blueprint.blocks.map { lookup($0).speedFactor }
+                avgSpeedFactor = factors.isEmpty ? 1.0 : factors.reduce(0, +) / Float(factors.count)
+            } else {
+                avgSpeedFactor = 1.0
+            }
+            let computedSpeed = GameConfiguration.Movement.forwardSpeed * avgSpeedFactor
+
             stackRoot.components.set(StackControllerComponent(
                 memberEntityNames: memberNames,
+                attachedBlockCount: memberNames.count,
+                movementSpeed: computedSpeed,
                 team: team
             ))
 
@@ -51,7 +67,8 @@ struct StackFactory {
         type: BlockType,
         index: Int,
         teamName: String,
-        withPhysics: Bool
+        withPhysics: Bool,
+        resolvedStats: ResolvedBlockStats? = nil
     ) -> ModelEntity {
         let size = type.size
         let mesh = MeshResource.generateBox(size: size, cornerRadius: 0.03)
@@ -71,6 +88,8 @@ struct StackFactory {
 
         if withPhysics {
             let shape = ShapeResource.generateBox(size: size)
+            let mass = resolvedStats?.effectiveMass ?? type.mass
+            let restitution = resolvedStats?.restitution ?? GameConfiguration.Physics.blockRestitution
 
             block.components.set(CollisionComponent(
                 shapes: [shape],
@@ -78,11 +97,11 @@ struct StackFactory {
             ))
             block.components.set(PhysicsBodyComponent(
                 shapes: [shape],
-                mass: type.mass,
+                mass: mass,
                 material: .generate(
                     staticFriction: GameConfiguration.Physics.blockFriction,
                     dynamicFriction: GameConfiguration.Physics.blockFriction * 0.8,
-                    restitution: GameConfiguration.Physics.blockRestitution
+                    restitution: restitution
                 ),
                 mode: .dynamic
             ))

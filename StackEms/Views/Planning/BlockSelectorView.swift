@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BlockSelectorView: View {
     @Environment(\.appContainer) private var container
+    @State private var selectedBlockForUpgrade: BlockType?
 
     private let gridColumns = [
         GridItem(.flexible()),
@@ -15,6 +16,10 @@ struct BlockSelectorView: View {
             blockTypeGrid
             compositionStats
         }
+        .sheet(item: $selectedBlockForUpgrade) { blockType in
+            BlockUpgradeView(blockType: blockType)
+                .appEnvironment(container)
+        }
     }
 
     // MARK: - Selected Blocks
@@ -26,7 +31,7 @@ struct BlockSelectorView: View {
                 .foregroundStyle(StackEmsTheme.Colors.textSecondary)
 
             if container.appState.matchState.playerBlueprint.blocks.isEmpty {
-                Text("Tap blocks below to add")
+                Text("Tap + to add blocks")
                     .font(StackEmsTheme.Fonts.caption)
                     .foregroundStyle(StackEmsTheme.Colors.textSecondary.opacity(0.6))
                     .frame(height: 36)
@@ -65,43 +70,66 @@ struct BlockSelectorView: View {
     private var blockTypeGrid: some View {
         LazyVGrid(columns: gridColumns, spacing: 8) {
             ForEach(BlockType.allCases) { blockType in
-                blockButton(for: blockType)
+                blockCard(for: blockType)
             }
         }
         .padding(.horizontal)
     }
 
-    private func blockButton(for blockType: BlockType) -> some View {
-        Button {
-            container.stackBuilderInteractor.addBlock(blockType)
-        } label: {
-            VStack(spacing: 4) {
-                Image(blockType.textureName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 50)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+    private func blockCard(for blockType: BlockType) -> some View {
+        let upgrades = container.appState.profileState.upgradeLevel(for: blockType)
+        let base = blockType.baseStats
 
-                Text(blockType.displayName)
-                    .font(.system(size: 11, weight: .semibold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .foregroundStyle(StackEmsTheme.Colors.textPrimary)
-
-                Text(blockType.subtitle)
-                    .font(.system(size: 9))
-                    .foregroundStyle(Color(blockType.color))
-
-                HStack(spacing: 4) {
-                    Text("M:\(String(format: "%.0f", blockType.mass))")
-                    Text("HP:\(blockType.health)")
+        return VStack(spacing: 4) {
+            // Tap image area to open upgrade view
+            Image(blockType.textureName)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(height: 50)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .onTapGesture {
+                    selectedBlockForUpgrade = blockType
                 }
+
+            Text(blockType.displayName)
+                .font(.system(size: 11, weight: .semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .foregroundStyle(StackEmsTheme.Colors.textPrimary)
+
+            Text(blockType.subtitle)
                 .font(.system(size: 9))
-                .foregroundStyle(StackEmsTheme.Colors.textSecondary)
+                .foregroundStyle(Color(blockType.color))
+
+            // Stat indicators
+            HStack(spacing: 6) {
+                miniStat(icon: "bolt.fill", level: base.power + upgrades.power - 1, color: .orange)
+                miniStat(icon: "shield.fill", level: base.defense + upgrades.defense - 1, color: .blue)
+                miniStat(icon: "hare.fill", level: base.speed + upgrades.speed - 1, color: .green)
             }
-            .padding(6)
-            .background(StackEmsTheme.Colors.surface)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            // Add button
+            Button {
+                container.stackBuilderInteractor.addBlock(blockType)
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(StackEmsTheme.Colors.accent)
+            }
+        }
+        .padding(6)
+        .background(StackEmsTheme.Colors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func miniStat(icon: String, level: Int, color: Color) -> some View {
+        HStack(spacing: 1) {
+            Image(systemName: icon)
+                .font(.system(size: 7))
+                .foregroundStyle(color)
+            Text("\(level)")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(color)
         }
     }
 
@@ -109,19 +137,23 @@ struct BlockSelectorView: View {
 
     private var compositionStats: some View {
         let bp = container.appState.matchState.playerBlueprint
+        let profile = container.appState.profileState
 
         return VStack(spacing: 8) {
-            HStack(spacing: 20) {
-                statItem(label: "Mass", value: String(format: "%.1f", bp.totalMass))
-                statItem(label: "HP", value: "\(bp.totalHealth)")
+            HStack(spacing: 16) {
                 statItem(label: "Blocks", value: "\(bp.blocks.count)")
                 statItem(label: "Stability", value: stabilityRating(for: bp))
-            }
 
-            if !bp.blocks.isEmpty {
-                HStack(spacing: 20) {
-                    statItem(label: "Avg Mass", value: String(format: "%.1f", bp.totalMass / Float(bp.blocks.count)))
-                    statItem(label: "Avg HP", value: "\(bp.totalHealth / bp.blocks.count)")
+                if !bp.blocks.isEmpty {
+                    let avgSpeed = bp.blocks.map { block in
+                        let resolved = BlockStatsConfig.resolve(
+                            blockType: block,
+                            upgrades: profile.upgradeLevel(for: block)
+                        )
+                        return resolved.speedFactor
+                    }.reduce(0, +) / Float(bp.blocks.count)
+
+                    statItem(label: "Speed", value: String(format: "%.1f", GameConfiguration.Movement.forwardSpeed * avgSpeed))
                 }
             }
 
@@ -151,7 +183,6 @@ struct BlockSelectorView: View {
     private func stabilityRating(for blueprint: StackBlueprint) -> String {
         guard !blueprint.blocks.isEmpty else { return "-" }
 
-        // Heavier blocks at the bottom = more stable
         var score: Float = 0
         let count = blueprint.blocks.count
         for (index, block) in blueprint.blocks.enumerated() {
@@ -159,7 +190,7 @@ struct BlockSelectorView: View {
             score += block.mass * positionWeight
         }
 
-        let maxPossible = Float(count) * 4.0 // max mass is 4.0 (heavy)
+        let maxPossible = Float(count) * 4.0
         let ratio = score / maxPossible
 
         if ratio > 0.6 { return "High" }
