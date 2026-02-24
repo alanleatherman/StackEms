@@ -10,10 +10,10 @@ struct GameConfiguration {
         static let toppleAngleThreshold: Float = 45.0
         static let swipeForceMultiplier: Float = 12.0
         static let maxSwipeForce: Float = 50.0
-        static let blockDetachDistance: Float = 3.0
+        static let blockDetachDistance: Float = 2.0
         static let blockFallThreshold: Float = -0.5
-        static let blockTiltThreshold: Float = 60.0
-        static let minBlocksToSurvive: Int = 2
+        static let blockTiltThreshold: Float = 45.0
+        static let minBlocksToSurvive: Int = 3
     }
 
     enum Arena {

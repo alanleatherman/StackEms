@@ -20,6 +20,7 @@ final class AppState {
 @Observable
 final class MatchState {
     var phase: MatchPhase = .menu
+    var matchID: UUID = UUID()
     var playerBlueprint: StackBlueprint = .defaultBlueprint
     var opponentBlueprint: StackBlueprint = .defaultBlueprint
     var matchTimer: TimeInterval = 0

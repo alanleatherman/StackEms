@@ -7,6 +7,8 @@ struct CombatView: View {
 
     var body: some View {
         ZStack {
+            Color.black.ignoresSafeArea()
+
             RealityView { content in
                 let arena = ArenaBuilder.buildArena()
                 content.add(arena)

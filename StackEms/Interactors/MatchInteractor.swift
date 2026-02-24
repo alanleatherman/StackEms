@@ -12,6 +12,7 @@ final class MatchInteractor {
     }
 
     func startMatch() {
+        matchState.matchID = UUID()
         matchState.phase = .countdown
         matchState.matchTimer = 0
         matchState.playerBlocksRemaining = matchState.playerBlueprint.blocks.count
@@ -50,6 +51,10 @@ final class MatchInteractor {
     func returnToMenu() {
         matchState.phase = .menu
         matchState.isPaused = false
+    }
+
+    func goToSquad() {
+        matchState.phase = .squad
     }
 
     func goToPlanning() {

@@ -6,9 +6,9 @@ struct AIBehaviorSystem: System {
     static let playerQuery = EntityQuery(where: .has(StackControllerComponent.self))
 
     // Distance thresholds
-    private let circleRange: Float = 4.0
+    private let circleRange: Float = 3.5
     private let chargeRange: Float = 2.5
-    private let ramRange: Float = 1.2
+    private let ramRange: Float = 0.6
     private let retreatDistance: Float = 5.0
 
     init(scene: RealityKit.Scene) {}
@@ -86,7 +86,7 @@ struct AIBehaviorSystem: System {
 
             case .charge:
                 desiredDir = dirToPlayer
-                speed = 1.0
+                speed = 0.8 + ai.aggression * 0.4
 
             case .retreat:
                 desiredDir = -dirToPlayer // away from player
@@ -112,9 +112,9 @@ struct AIBehaviorSystem: System {
             controller.movementInput = SIMD2<Float>(steer, drive)
 
             // Swipe attack when in range
-            if distance < ramRange &&
-               ai.timeSinceLastSwipe >= GameConfiguration.AI.swipeCooldown * TimeInterval(1.5 - ai.aggression) {
-                if Float.random(in: 0...1) < ai.aggression {
+            if distance < ramRange * 2.0 &&
+               ai.timeSinceLastSwipe >= GameConfiguration.AI.swipeCooldown * TimeInterval(1.0 - ai.aggression * 0.5) {
+                if Float.random(in: 0...1) < (ai.aggression + 0.3) {
                     ai.timeSinceLastSwipe = 0
                     applyAISwipe(entity: entity, direction: dirToPlayer)
                 }
@@ -149,8 +149,8 @@ struct AIBehaviorSystem: System {
             }
 
         case .circle:
-            let circleTime = 1.5 - TimeInterval(ai.aggression)
-            if ai.phaseTimer > circleTime && dot > 0.5 && distance < chargeRange * 1.5 {
+            let circleTime = 1.0 - TimeInterval(ai.aggression * 0.5)
+            if ai.phaseTimer > circleTime && dot > 0.3 && distance < chargeRange * 1.5 {
                 ai.phase = .charge
                 ai.phaseTimer = 0
                 ai.chargesBeforeRetreat += 1
@@ -161,7 +161,7 @@ struct AIBehaviorSystem: System {
             }
 
         case .charge:
-            if distance < ramRange || ai.phaseTimer > 2.0 {
+            if distance < ramRange || ai.phaseTimer > 3.0 {
                 if ai.chargesBeforeRetreat >= 2 || Float.random(in: 0...1) < 0.4 {
                     ai.phase = .retreat
                     ai.phaseTimer = 0

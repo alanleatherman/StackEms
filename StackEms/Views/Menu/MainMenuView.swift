@@ -33,12 +33,15 @@ struct MainMenuView: View {
                     .buttonStyle(PrimaryButtonStyle())
 
                     Button("Quick Match") {
+                        container.stackBuilderInteractor.generateAIBlueprint(
+                            difficulty: container.appState.settingsState.difficulty
+                        )
                         container.matchInteractor.startMatch()
                     }
                     .buttonStyle(SecondaryButtonStyle())
 
-                    Button("Default Squad") {
-                        container.stackBuilderInteractor.resetToDefault()
+                    Button("Squad") {
+                        container.matchInteractor.goToSquad()
                     }
                     .buttonStyle(SecondaryButtonStyle())
                 }

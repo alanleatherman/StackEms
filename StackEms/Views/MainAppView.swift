@@ -14,10 +14,13 @@ struct MainAppView: View {
             switch appState.matchState.phase {
             case .menu:
                 MainMenuView()
+            case .squad:
+                SquadView()
             case .planning:
                 PlanningView()
             case .countdown, .combat:
                 CombatView()
+                    .id(appState.matchState.matchID)
             case .result(let result):
                 ResultsView(result: result)
             }

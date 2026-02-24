@@ -39,14 +39,16 @@ struct StackMovementSystem: System {
             var movement = normalizedForward * forwardInput * controller.movementSpeed * dt
             var newPos = entity.position + movement
 
-            // Collision with other stacks — prevent overlap at block size
-            let minDist: Float = 0.5 // roughly half a block width per stack
+            // Soft collision — push stacks apart gently instead of hard blocking
+            let collisionRadius: Float = 0.35
+            let pushStrength: Float = 2.0
             for other in stackPositions where other.team != controller.team {
                 let diff = SIMD3<Float>(newPos.x - other.position.x, 0, newPos.z - other.position.z)
                 let dist = length(diff)
-                if dist < minDist && dist > 0.01 {
+                if dist < collisionRadius && dist > 0.01 {
                     let pushDir = normalize(diff)
-                    newPos = other.position + pushDir * minDist
+                    let overlap = collisionRadius - dist
+                    newPos += pushDir * overlap * pushStrength
                 }
             }
 
